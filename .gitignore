@@ -1,24 +1,31 @@
-# Miscellaneous
+# General
 *.class
 *.log
 *.pyc
 *.swp
 .DS_Store
+
+# Editor-specific
 .atom/
 .buildlog/
 .history
 .svn/
-migrate_working_dir/
-
-# IntelliJ related
+.idea/
 *.iml
 *.ipr
 *.iws
-.idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
+# Migration working directories
+migrate_working_dir/
+
+# IntelliJ-related
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Visual Studio Code
+# Uncomment the following line if you don't want to include VS Code config in your repo.
 #.vscode/
 
 # Flutter/Dart/Pub related
@@ -29,15 +36,21 @@ migrate_working_dir/
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
-/build/
+build/
 
-# Symbolication related
+# Symbolication and Obfuscation related
 app.*.symbols
-
-# Obfuscation related
 app.*.map.json
 
-# Android Studio will place build artifacts here
+# Android-specific
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Other common unnecessary files
+*.bak
+*.tmp
+*.old
+*.swp
+*.lock
+*.cache
