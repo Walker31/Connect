@@ -106,9 +106,9 @@ class InterestsState extends State<Interests> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 StepProgressIndicator(
-                  currentStep: 4,
+                  currentStep: 5,
                   selectedColor: Colors.red.shade900,
-                  totalSteps: 5,
+                  totalSteps: 6,
                   size: 10,
                   unselectedColor: Colors.grey.shade300,
                   roundedEdges: const Radius.circular(10),
@@ -117,8 +117,8 @@ class InterestsState extends State<Interests> {
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Step 4'),
                     Text('Step 5'),
+                    Text('Step 6'),
                   ],
                 ),
               ],

@@ -1,5 +1,5 @@
 import 'package:connect/Components/back.dart';
-import 'package:connect/Login/Sign%20Up/bday.dart';
+import 'package:connect/Login/Sign%20Up/password.dart';
 import 'package:flutter/material.dart';
 import 'package:step_progress_indicator/step_progress_indicator.dart';
 
@@ -35,6 +35,7 @@ class EnterNameState extends State<EnterName> {
           ),
           const SizedBox(height: 16),
           TextField(
+            textCapitalization: TextCapitalization.words,
             controller: nameController,
             keyboardType: TextInputType.name,
             decoration: InputDecoration(
@@ -59,7 +60,7 @@ class EnterNameState extends State<EnterName> {
                 StepProgressIndicator(
                   currentStep: 1,
                   selectedColor: Colors.red.shade900,
-                  totalSteps: 5,
+                  totalSteps: 6,
                   size: 10,
                   unselectedColor: Colors.grey.shade300,
                   roundedEdges: const Radius.circular(10),
@@ -69,7 +70,7 @@ class EnterNameState extends State<EnterName> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('Step 1'),
-                    Text('Step 5'),
+                    Text('Step 6'),
                   ],
                 ),
               ],
@@ -101,9 +102,9 @@ class EnterNameState extends State<EnterName> {
                   widget.formdata['name'] = nameController.text;
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => EnterBday(
-                      formdata : widget.formdata
-                    )),
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            Password(formdata: widget.formdata)),
                   );
                 }
               },

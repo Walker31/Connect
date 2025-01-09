@@ -3,7 +3,7 @@ class ApiPath {
 
   static login() => '$baseURL/user/login/';
 
-  static signup() => '$baseURL/user/signnup/';
+  static signup() => '$baseURL/user/signup/';
 
   static createPost() => '$baseURL/post/create/';
 
@@ -14,4 +14,8 @@ class ApiPath {
   static updatePost() => '$baseURL/post/update/';
 
   static deletePost() => '$baseURL/post/delete';
+
+  static uploadImage() => '$baseURL/azure/upload';
+
+  static getProfiles() => '$baseURL/match/get';
 }

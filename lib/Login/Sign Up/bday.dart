@@ -94,9 +94,9 @@ class EnterBdayState extends State<EnterBday> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 StepProgressIndicator(
-                  currentStep: 2,
+                  currentStep: 3,
                   selectedColor: Colors.red.shade900,
-                  totalSteps: 5,
+                  totalSteps: 6,
                   size: 10,
                   unselectedColor: Colors.grey.shade300,
                   roundedEdges: const Radius.circular(10),
@@ -105,8 +105,8 @@ class EnterBdayState extends State<EnterBday> {
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Step 2'),
-                    Text('Step 5'),
+                    Text('Step 3'),
+                    Text('Step 6'),
                   ],
                 ),
               ],

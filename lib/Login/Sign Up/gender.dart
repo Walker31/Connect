@@ -68,9 +68,9 @@ class GenderState extends State<Gender> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   StepProgressIndicator(
-                    currentStep: 3,
+                    currentStep: 4,
                     selectedColor: Colors.red.shade900,
-                    totalSteps: 5,
+                    totalSteps: 6,
                     size: 10,
                     unselectedColor: Colors.grey.shade300,
                     roundedEdges: const Radius.circular(10),
@@ -79,8 +79,8 @@ class GenderState extends State<Gender> {
                   const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Step 3'),
-                      Text('Step 5'),
+                      Text('Step 4'),
+                      Text('Step 6'),
                     ],
                   ),
                 ],
@@ -112,9 +112,8 @@ class GenderState extends State<Gender> {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => Interests(
-                            formdata : widget.formdata
-                          )));
+                          builder: (context) =>
+                              Interests(formdata: widget.formdata)));
                 }
               },
               child: const Icon(Icons.arrow_forward),
@@ -151,7 +150,7 @@ class GenderCards extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
           child: SizedBox(
-            width: 140,
+            width: 130,
             height: 140,
             child: Padding(
               padding: const EdgeInsets.all(16.0),

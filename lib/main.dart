@@ -1,23 +1,60 @@
-import 'package:connect/Login/login_main.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'Backend/location.dart';
+import 'Login/login_main.dart';
+import 'Providers/location_provider.dart';
+import 'Providers/profile_provider.dart';
 
-void main() {
-  runApp(const App());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Create an instance of LocationProvider
+  LocationProvider locationProvider = LocationProvider();
+
+  // Create an instance of LocationService and pass the LocationProvider
+  LocationService locationService = LocationService(locationProvider);
+
+  // Fetch the current location
+  await locationService.getCurrentLocation();
+
+  // Listen for location changes
+  locationService.listenForLocationChanges();
+
+  // Create an instance of ProfileProvider
+  ProfileProvider profileProvider = ProfileProvider();
+
+  runApp(App(
+    locationProvider: locationProvider,
+    profileProvider: profileProvider,
+  ));
 }
 
 class App extends StatelessWidget {
-  const App({super.key});
+  final LocationProvider locationProvider;
+  final ProfileProvider profileProvider;
 
-  // This widget is the root of your application.
+  const App({
+    super.key,
+    required this.locationProvider,
+    required this.profileProvider,
+  });
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<LocationProvider>.value(value: locationProvider),
+        ChangeNotifierProvider<ProfileProvider>.value(value: profileProvider),
+      ],
+      child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Flutter Demo',
+        title: 'Connect',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
-        home: const MainLogin());
+        home: const MainLogin(),
+      ),
+    );
   }
 }

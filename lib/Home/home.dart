@@ -1,11 +1,10 @@
-import 'package:connect/Backend/posts_api.dart';
+import 'package:connect/Backend/profile_api.dart';
 import 'package:connect/Home/partner_card.dart';
-import 'package:connect/Home/post_card.dart';
 import 'package:connect/Model/profile.dart';
 import 'package:connect/Settings/settings_main.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg_icons/flutter_svg_icons.dart';
 import 'package:logger/logger.dart';
-import '../Model/post.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,35 +13,31 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => HomeState();
 }
 
-class HomeState extends State<HomePage> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  List<Post> posts = [];
-  final PostApi _postApi = PostApi();
+class HomeState extends State<HomePage> {
   Logger logger = Logger();
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-    fetchPosts();
-  }
-
-  Future<void> fetchPosts() async {
-    try {
-      final fetchedPosts = await _postApi.listPosts();
-      setState(() {
-        posts = fetchedPosts; // Update the posts list
-      });
-    } catch (e) {
-      // Handle error (you can show a snackbar or a dialog)
-      logger.e('Error fetching posts: $e');
-    }
-  }
+  List<Profile> profiles = [];
+  final ProfileApi _profileApi = ProfileApi();
 
   @override
   void dispose() {
-    _tabController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    fetchProfiles();
+    super.initState();
+  }
+
+  Future<void> fetchProfiles() async {
+    try {
+      final fetchedProfiles = await _profileApi.getProfiles(context);
+      setState(() {
+        profiles = fetchedProfiles;
+      });
+    } catch (e) {
+      logger.e('Error fetching posts: $e');
+    }
   }
 
   @override
@@ -93,105 +88,63 @@ class HomeState extends State<HomePage> with SingleTickerProviderStateMixin {
       ),
       body: Column(
         children: [
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
-            decoration: BoxDecoration(
-              color: Colors.red.shade900,
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: TabBar(
-              controller: _tabController,
-              indicator: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              labelColor: Colors.red.shade700,
-              unselectedLabelColor: Colors.white,
-              tabs: const [
-                Tab(
-                  child: Text('Make Friends'),
-                ),
-                Tab(
-                  child: Text('Search Partners'),
-                ),
-              ],
-            ),
+          const SizedBox(
+            height: 60,
           ),
           Expanded(
-            child: TabBarView(
-              key: const PageStorageKey('tab1'),
-              controller: _tabController,
+            child: Column(
               children: [
                 Center(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16.0),
-                    itemCount: posts.length,
-                    itemBuilder: (context, index) {
-                      final Post post = posts[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16.0),
-                        child: PostCard(
-                          post: post,
-                        ),
-                      );
-                    },
-                  ),
+                    child: PartnerCard(
+                        profile:
+                            Profile(interests: [], gender: 'Male', age: 20))),
+                const SizedBox(
+                  height: 8,
                 ),
-                Column(
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Center(
-                        child: PartnerCard(
-                            profile: Profile(
-                                interests: [], gender: 'Male', age: 20))),
-                    const SizedBox(
-                      height: 8,
+                    Container(
+                      decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: const Color.fromRGBO(198, 40, 40, 1)
+                              .withOpacity(0.7)),
+                      child: IconButton(
+                        color: Colors.white,
+                        onPressed: () {},
+                        icon: const SvgIcon(
+                          icon: SvgIconData('assets/svgIcons/cross.svg'),
+                        ),
+                      ),
                     ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.red.shade800.withOpacity(0.7)),
-                          child: IconButton(
-                              onPressed: () {},
-                              icon: const Icon(
-                                Icons.cancel_outlined,
-                                color: Colors.white,
-                              )),
-                        ),
-                        const SizedBox(
-                          width: 20,
-                        ),
-                        Container(
-                          decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.red.shade800.withOpacity(0.7)),
-                          child: IconButton(
-                              onPressed: () {},
-                              icon:
-                                  const Icon(Icons.star, color: Colors.white)),
-                        ),
-                        const SizedBox(
-                          width: 20,
-                        ),
-                        Container(
-                          decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.red.shade800.withOpacity(0.7)),
-                          child: IconButton(
-                              onPressed: () {},
-                              icon: const Icon(
-                                Icons.favorite,
-                                color: Colors.white,
-                              )),
-                        )
-                      ],
+                    const SizedBox(
+                      width: 20,
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.red.shade800.withOpacity(0.7)),
+                      child: IconButton(
+                          onPressed: () {},
+                          icon: const Icon(Icons.star, color: Colors.white)),
+                    ),
+                    const SizedBox(
+                      width: 20,
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.red.shade800.withOpacity(0.7)),
+                      child: IconButton(
+                          onPressed: () {},
+                          icon: const Icon(
+                            Icons.favorite,
+                            color: Colors.white,
+                          )),
                     )
                   ],
-                ),
+                )
               ],
             ),
           ),

@@ -1,13 +1,15 @@
-// ignore_for_file: unused_local_variable
-
+import 'dart:convert';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:connect/Backend/path.dart';
 import 'package:connect/Base%20Scaffold/base.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:logger/logger.dart';
 import 'package:step_progress_indicator/step_progress_indicator.dart';
 import '../../Backend/auth.dart';
 import '../../Components/back.dart';
 import 'dart:async';
-import 'dart:math';
 
 import '../../Model/profile.dart';
 
@@ -21,37 +23,76 @@ class UploadImage extends StatefulWidget {
 }
 
 class _UploadImageState extends State<UploadImage> {
-  final List<String> _selectedImagePaths = [];
+  final List<File> _selectedImages = [];
+  final ImagePicker picker = ImagePicker();
   Logger logger = Logger();
   bool _isUploading = false;
   bool isLoading = false;
 
-  // Dummy function to simulate uploading images to Azure and getting URLs
+  @override
+  void dispose() {
+    // Add any necessary cleanup code here
+    super.dispose();
+  }
+
+  Future<void> pickImages() async {
+    final List<XFile> pickerFiles = await picker.pickMultiImage();
+    setState(() {
+      _selectedImages.addAll(pickerFiles.map((file) => File(file.path)));
+    });
+  }
+
   Future<void> _uploadImages() async {
+    if (_selectedImages.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select images to upload')));
+      return;
+    }
     setState(() {
       _isUploading = true;
     });
+    final url = Uri.parse(ApiPath.uploadImage());
+    final request = http.MultipartRequest('POST', url);
 
-    List<String> uploadedImageUrls = [];
+    try {
+      for (var image in _selectedImages) {
+        request.files
+            .add(await http.MultipartFile.fromPath('images', image.path));
+      }
 
-    for (var imagePath in _selectedImagePaths) {
-      await Future.delayed(const Duration(seconds: 1)); // Simulate delay
-      String randomId = Random().nextInt(100000).toString();
-      String uploadedUrl =
-          "https://exampleazure.blob.core.windows.net/images/$randomId.jpg";
-      uploadedImageUrls.add(uploadedUrl);
+      final response = await request.send();
+      if (response.statusCode == 200) {
+        final responseBody = await response.stream.bytesToString();
+        final jsonResponse = jsonDecode(responseBody);
+
+        // Extract URLs from the response
+        final List<String> uploadedImageUrls =
+            List<String>.from(jsonResponse['image_urls']);
+
+        setState(() {
+          widget.formdata['uploadedImageUrls'] = uploadedImageUrls;
+        });
+
+        logger.d('Uploaded Images: $uploadedImageUrls');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Images uploaded successfully!')),
+        );
+      } else {
+        logger.e('Failed to upload images: ${response.reasonPhrase}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Image upload failed.')),
+        );
+      }
+    } catch (e) {
+      logger.e('Error uploading images: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occurred during upload.')),
+      );
+    } finally {
+      setState(() {
+        _isUploading = false;
+      });
     }
-
-    setState(() {
-      _isUploading = false;
-    });
-
-    // Update form data
-    widget.formdata['uploadedImageUrls'] = uploadedImageUrls;
-
-    // Log the results (replace with actual actions)
-    logger.d('Uploaded Images: $uploadedImageUrls');
-    logger.d('Form Data: ${widget.formdata}');
   }
 
   @override
@@ -82,24 +123,24 @@ class _UploadImageState extends State<UploadImage> {
             Center(
               child: Container(
                 padding: const EdgeInsets.all(16),
-                child: const Column(
+                child: Column(
                   children: [
                     Row(
                       children: [
-                        ImageCard(isLarge: true),
+                        ImageCard(isLarge: true, onImagePicked: pickImages),
                         Column(
                           children: [
-                            ImageCard(),
-                            ImageCard(),
+                            ImageCard(onImagePicked: pickImages),
+                            ImageCard(onImagePicked: pickImages),
                           ],
                         ),
                       ],
                     ),
                     Row(
                       children: [
-                        ImageCard(),
-                        ImageCard(),
-                        ImageCard(),
+                        ImageCard(onImagePicked: pickImages),
+                        ImageCard(onImagePicked: pickImages),
+                        ImageCard(onImagePicked: pickImages),
                       ],
                     ),
                   ],
@@ -113,9 +154,9 @@ class _UploadImageState extends State<UploadImage> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   StepProgressIndicator(
-                    currentStep: 5,
+                    currentStep: 6,
                     selectedColor: Colors.red.shade900,
-                    totalSteps: 5,
+                    totalSteps: 6,
                     size: 10,
                     unselectedColor: Colors.grey.shade300,
                     roundedEdges: const Radius.circular(10),
@@ -124,8 +165,8 @@ class _UploadImageState extends State<UploadImage> {
                   const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Step 5'),
-                      Text('Step 5'),
+                      Text('Step 6'),
+                      Text('Step 6'),
                     ],
                   ),
                 ],
@@ -171,61 +212,61 @@ class _UploadImageState extends State<UploadImage> {
   }
 
   Future<void> signup() async {
-  // Show loading indicator
-  setState(() => isLoading = true);
+    // Show loading indicator
+    setState(() => isLoading = true);
 
-  // Convert formdata to Profile model
-  try {
-    final profile = Profile(
-      name: widget.formdata['name'],
-      gender: widget.formdata['gender'],
-      phoneNo: widget.formdata['phoneNumber'],
-      password: widget.formdata['password'],
-      age: widget.formdata['age'],
-      interests : widget.formdata['interests'],
-      pictures: widget.formdata['uploadedImageUrls'],
-    );
-
-    // Perform signup using the Auth class
-    final auth = Auth();
-    final response = await auth.signup(profile);
-
-    setState(() => isLoading = false); // Hide loading indicator
-
-    if (response.statusCode == 200) {
-      // Signup successful, proceed to next screen
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const Home()),
-        (route) => false,
+    // Convert formdata to Profile model
+    try {
+      logger.d(widget.formdata);
+      final profile = Profile(
+        name: widget.formdata['name'],
+        gender: widget.formdata['gender'],
+        phoneNo: widget.formdata['phoneNumber'],
+        password: widget.formdata['password'],
+        age: widget.formdata['age'],
+        interests: widget.formdata['interests'],
+        pictures: widget.formdata['uploadedImageUrls'],
       );
-    } else {
-      // Show error message
-      _showErrorDialog('Signup failed: ${response.body}');
+
+      // Perform signup using the Auth class
+      final auth = Auth();
+      final response = await auth.signup(profile);
+
+      setState(() => isLoading = false); // Hide loading indicator
+
+      if (response.statusCode == 200) {
+        // Signup successful, proceed to next screen
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const Home()),
+          (route) => false,
+        );
+      } else {
+        // Show error message
+        _showErrorDialog('Signup failed: ${response.body}');
+      }
+    } catch (e) {
+      _showErrorDialog('An error occurred: $e');
     }
-  } catch (e) {
-    setState(() => isLoading = false); // Hide loading indicator
-    _showErrorDialog('An error occurred: $e');
   }
-}
 
-void _showErrorDialog(String message) {
-  showDialog(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: const Text('Error'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      );
-    },
-  );
-}
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Error'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   void _showAlertDialog(BuildContext context) {
     showDialog(
@@ -313,8 +354,10 @@ void _showErrorDialog(String message) {
 
 class ImageCard extends StatelessWidget {
   final bool isLarge;
+  final VoidCallback onImagePicked;
 
-  const ImageCard({super.key, this.isLarge = false});
+  const ImageCard(
+      {super.key, this.isLarge = false, required this.onImagePicked});
 
   @override
   Widget build(BuildContext context) {
@@ -341,7 +384,7 @@ class ImageCard extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             GestureDetector(
-              onTap: () {},
+              onTap: onImagePicked,
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.pink.shade200,
