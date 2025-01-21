@@ -1,3 +1,4 @@
+import 'package:connect/Chat/chat_main.dart';
 import 'package:connect/Matches/matches_main.dart';
 import 'package:flutter/material.dart';
 import '../Home/home.dart';
@@ -15,7 +16,7 @@ class HomeState extends State<Home> {
   final List<Widget> _pages = [
     const HomePage(),
     const Match(),
-    const SettingsPage(),
+    const ChatMain(),
   ];
 
   void _onItemTapped(int index) {
@@ -47,22 +48,6 @@ class HomeState extends State<Home> {
             label: 'Chat',
           ),
         ],
-      ),
-    );
-  }
-}
-
-class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
-      body: const Center(
-        child: Text('Settings Page Content'),
       ),
     );
   }

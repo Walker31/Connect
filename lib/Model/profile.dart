@@ -4,20 +4,22 @@ class Profile {
   int? age;
   String? phoneNo;
   String gender;
+  String? location;
   DateTime? createdAt;
   DateTime? updatedAt;
   String? about;
   String? profilePicture;
-  List<String> interests;
+  List<String>? interests;
   List<String>? pictures;
   String? password;
 
   // Constructor with default values
   Profile({
     this.id,
-    required this.gender,
-    this.password ='',
-    required this.interests,
+    this.gender = 'Male',
+    this.password = '',
+    this.location = '',
+    this.interests = const ['Coding'],
     this.name = "Anonymous", // Default name
     this.phoneNo = "", // Default empty string for phone number
     this.age = 20,
@@ -32,9 +34,12 @@ class Profile {
   factory Profile.fromJson(Map<String, dynamic> json) {
     return Profile(
       id: json['id'],
+      location: json['location'] ?? 'TBD',
       password: json['password'] ?? '',
-      gender: json['gender'],
-      interests: json['interests'],
+      gender: json['gender'] ?? 'Male',
+      interests: json['interests'] != null
+          ? List<String>.from(json['interests'])
+          : [], // Handle null interests
       age: json['age'] ?? 20,
       name: json['name'] ?? "Anonymous", // Default to "Anonymous" if null
       phoneNo: json['phone_no'] ?? "", // Default to empty string if null
@@ -55,24 +60,26 @@ class Profile {
 
   // Method to convert Profile to JSON
   Map<String, dynamic> toJson() {
-    return {
+    final json = {
       'id': id,
       'name': name,
       'phone_no': phoneNo,
       'interests': interests,
       'gender': gender,
       'age': age,
+      'location': location,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
       'about': about,
       'profile_picture': profilePicture,
       'pictures': pictures,
     };
+    return json;
   }
 
   // Optional: Override the toString method for easier debugging
   @override
   String toString() {
-    return 'Profile{id: $id, name: $name, age: $age, phoneNo: $phoneNo, createdAt: $createdAt, updatedAt: $updatedAt, about: $about, profilePicture: $profilePicture, pictures: $pictures}';
+    return 'Profile \n {id: $id, name: $name, age: $age, phoneNo: $phoneNo, gender: $gender, createdAt: $createdAt, updatedAt: $updatedAt, about: $about, profilePicture: $profilePicture,location: $location, interests: $interests, pictures: $pictures}';
   }
 }

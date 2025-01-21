@@ -1,7 +1,6 @@
 import 'package:connect/Matches/match_card.dart';
-import 'package:connect/Matches/profile.dart';
 import 'package:flutter/material.dart';
-import 'circle.dart';
+import '../Components/circle.dart';
 
 class Match extends StatefulWidget {
   const Match({super.key});
@@ -82,10 +81,12 @@ class MatchState extends State<Match> {
                 itemBuilder: (context, index) {
                   return GestureDetector(
                     onTap: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const Profile()));
+                      // Navigator.push(
+                      //     context,
+                      //     MaterialPageRoute(
+                      //         builder: (context) => const ProfilePage(
+                      //           profile: ,
+                      //         )));
                     },
                     child: const MatchCard(
                       imagePath: 'assets/mainpic.jpg',

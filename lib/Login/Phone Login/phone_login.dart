@@ -16,6 +16,7 @@ class PhoneLoginState extends State<PhoneLogin> {
   final TextEditingController phone = TextEditingController();
   final TextEditingController password = TextEditingController();
   final Logger logger = Logger();
+  bool hide = false;
 
   bool isLoading = false; // Corrected initial state
 
@@ -36,7 +37,7 @@ class PhoneLoginState extends State<PhoneLogin> {
     }
 
     try {
-      final response = await Auth().login(context,phone.text, password.text);
+      final response = await Auth().login(context, phone.text, password.text);
 
       logger.d('Response received: ${response.statusCode}');
       logger.d('Response body: ${response.body}');
@@ -128,9 +129,25 @@ class PhoneLoginState extends State<PhoneLogin> {
                 const SizedBox(height: 20),
                 TextFormField(
                   controller: password,
-                  obscureText: true,
+                  obscureText: !hide,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
+                    suffixIcon: Opacity(
+                      opacity: 0.7,
+                      child: IconButton(
+                          onPressed: () {
+                            setState(() {
+                              hide = !hide;
+                            });
+                          },
+                          icon: hide == true
+                              ? const Icon(
+                                  Icons.visibility_outlined,
+                                  color: Colors.white,
+                                )
+                              : const Icon(Icons.visibility_off_outlined,
+                                  color: Colors.white)),
+                    ),
                     hintText: 'Enter your password',
                     hintStyle: const TextStyle(color: Colors.white70),
                     prefixIcon: const Icon(Icons.lock, color: Colors.white),

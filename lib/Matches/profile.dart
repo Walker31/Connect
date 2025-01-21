@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import '../Components/back.dart';
+import '../Model/profile.dart';
 import 'profile_info.dart';
 
-class Profile extends StatefulWidget {
-  const Profile({super.key});
+class ProfilePage extends StatefulWidget {
+  final Profile profile;
+  const ProfilePage({super.key, required this.profile});
 
   @override
-  State<Profile> createState() => ProfileState();
+  State<ProfilePage> createState() => ProfileState();
 }
 
-class ProfileState extends State<Profile> {
+class ProfileState extends State<ProfilePage> {
   final String name = 'Aditya';
   final int age = 22;
   final String gender = 'Male';

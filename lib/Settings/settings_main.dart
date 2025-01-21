@@ -1,5 +1,8 @@
 import 'package:connect/Components/back.dart';
+import 'package:connect/Login/login_main.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../Providers/profile_provider.dart'; // Add this import for Provider
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -9,12 +12,26 @@ class Settings extends StatefulWidget {
 }
 
 class SettingsState extends State<Settings> {
-  final String name = 'Aditya';
-  final int age = 21;
-  final String location = 'Chennai ,India';
-
   @override
   Widget build(BuildContext context) {
+    // Accessing the profile from the ProfileProvider
+    final profile = Provider.of<ProfileProvider>(context).profile;
+
+    // Check if profile is null to avoid crashes
+    if (profile == null) {
+      return Scaffold(
+        appBar: AppBar(
+          leading: const Back(),
+        ),
+        body: Center(
+          child: Text(
+            'Profile not found!',
+            style: TextStyle(fontSize: 20, color: Colors.grey.shade700),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         leading: const Back(),
@@ -41,7 +58,7 @@ class SettingsState extends State<Settings> {
                 ),
                 child: ClipOval(
                   child: Image.asset(
-                    'assets/pic.png',
+                    'assets/pic.png', // Replace with actual profile image if available
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -49,7 +66,7 @@ class SettingsState extends State<Settings> {
             ),
             const SizedBox(height: 20),
             Text(
-              '$name ,${age.toString()}',
+              '${profile.name} ${profile.age}',
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -57,7 +74,7 @@ class SettingsState extends State<Settings> {
             ),
             const SizedBox(height: 10),
             Text(
-              location,
+              profile.location!,
               style: const TextStyle(
                 fontSize: 16,
                 color: Colors.grey,
@@ -87,6 +104,26 @@ class SettingsState extends State<Settings> {
               onTap: () {
                 // Navigate to help & support screen
               },
+            ),
+            const SizedBox(height: 30),
+            // Sign Out Button
+            ElevatedButton(
+              onPressed: () {
+                // Clear the profile and log out
+                Provider.of<ProfileProvider>(context, listen: false)
+                    .clearProfile();
+                Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => const MainLogin()),
+                    (route) => false);
+              },
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.red.shade900,
+                backgroundColor: Colors.white38,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+              ),
+              child: const Text('Sign Out'),
             ),
           ],
         ),

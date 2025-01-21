@@ -32,6 +32,7 @@ class ProfileApi {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+        logger.d(jsonResponse);
         if (jsonResponse.containsKey('nearby_profiles')) {
           final List<dynamic> profilesJson = jsonResponse['nearby_profiles'];
           return profilesJson.map((json) => Profile.fromJson(json)).toList();

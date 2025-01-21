@@ -12,7 +12,6 @@ class PartnerCard extends StatefulWidget {
 }
 
 class PartnerState extends State<PartnerCard> {
-  
   @override
   Widget build(BuildContext context) {
     Profile match = widget.profile;
@@ -89,7 +88,7 @@ class PartnerState extends State<PartnerCard> {
                   const SizedBox(height: 8),
                   // Location Text
                   Text(
-                    'Chennai, India',
+                    match.location.toString(),
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.white70,
