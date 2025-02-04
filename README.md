@@ -1,4 +1,4 @@
-# Connect  
+# Connect  (Work in Progress)
 
 Connect is a **modern dating app** designed exclusively for **NIT Trichy students**. Whether you're looking for meaningful connections, friendships, or just someone to chat with, Connect makes it easy with **swipe-based matching**, real-time messaging, and smart recommendations.  
 
