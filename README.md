@@ -1,21 +1,32 @@
-# Connect
+# Connect  
 
-Dating app for NITT.
+Connect is a **modern dating app** designed exclusively for **NIT Trichy students**. Whether you're looking for meaningful connections, friendships, or just someone to chat with, Connect makes it easy with **swipe-based matching**, real-time messaging, and smart recommendations.  
 
-## Requirements
+## Features  
 
-Before setting up the app, ensure you have the following installed on your PC:
+- **Swipe to Match:** Like or pass on profiles with a simple swipe.  
+- **Real-Time Chat:** Instantly connect with your matches through seamless messaging.  
+- **Profile Customization:** Add photos, bio, and interests to stand out.  
+- **Smart Matching:** AI-powered recommendations to find the best matches.  
+- **Secure & Exclusive:** Verified access for NIT Trichy students only.  
 
-- [Flutter SDK](https://flutter.dev/docs/get-started/install)
-- [Dart SDK](https://dart.dev/get-dart)
-- [Android Studio](https://developer.android.com/studio) or any other IDE (VS Code, IntelliJ IDEA) with Flutter and Dart plugins installed.
-- [Git](https://git-scm.com/)
+## Tech Stack  
 
-## Setup Instructions
+- **Frontend:** Flutter (Dart)  
+- **Backend:** Django (Python)  
+- **Database:** PostgreSQL  
+- **Networking:** REST API for backend communication  
 
-### Step 1: Clone the Repository
+## Requirements  
 
-First, clone the repository to your local machine:
+Before setting up the app, ensure you have the following installed on your PC:  
 
-```bash
-git clone https://github.com/walker31/Connect.git
+- [Flutter SDK](https://flutter.dev/docs/get-started/install)  
+- [Dart SDK](https://dart.dev/get-dart)  
+- [Android Studio](https://developer.android.com/studio) or any other IDE (VS Code, IntelliJ IDEA) with Flutter and Dart plugins installed.  
+- [Git](https://git-scm.com/)  
+- [Python 3](https://www.python.org/downloads/) (for running the Django backend)  
+- [PostgreSQL](https://www.postgresql.org/download/) (for database management)  
+
+## Contributing
+We welcome contributions! Feel free to open issues and submit pull requests.
