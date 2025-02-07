@@ -12,14 +12,13 @@ class ProfilePage extends StatefulWidget {
 }
 
 class ProfileState extends State<ProfilePage> {
-  final String name = 'Aditya';
-  final int age = 22;
-  final String gender = 'Male';
-  final String location = 'Chennai, India';
-  final int friendCount = 3213;
-  final String about =
-      'I am a boy with a great sense of humor and easy to go out with.';
-  final List<String> interest = ['Football', 'Travel', 'Music'];
+  late String? name = widget.profile.name;
+  late int? age = widget.profile.age;
+  late String gender = widget.profile.gender;
+  late String? location = widget.profile.location;
+  late int friendCount = 3213;
+  late String? about = widget.profile.about;
+  late List<String>? interest = widget.profile.interests;
 
   @override
   Widget build(BuildContext context) {
@@ -41,87 +40,90 @@ class ProfileState extends State<ProfilePage> {
           top: MediaQuery.of(context).size.height * 0.3, // Adjust as needed
           left: 0,
           right: 0,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                '$name, ${age.toString()}',
-                style: const TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  shadows: [
-                    Shadow(
-                      offset: Offset(0, 2),
-                      blurRadius: 4,
-                      color: Colors.black45,
-                    ),
-                  ],
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                location,
-                style: const TextStyle(
-                  fontSize: 18,
-                  color: Colors.white70,
-                  shadows: [
-                    Shadow(
-                      offset: Offset(0, 2),
-                      blurRadius: 4,
-                      color: Colors.black45,
-                    ),
-                  ],
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(
-                height: 24,
-              ),
-              GestureDetector(
-                onTap: () {},
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.red.shade900),
-                    borderRadius: BorderRadius.circular(24),
-                    gradient: LinearGradient(
-                      colors: [Colors.red.shade50, Colors.red.shade300],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.red.shade100.withOpacity(0.6),
-                        blurRadius: 8,
-                        offset: const Offset(2, 4),
+          child: Container(
+            decoration: BoxDecoration(color: Colors.black.withOpacity(0.1)),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  '$name, ${age.toString()}',
+                  style: const TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    shadows: [
+                      Shadow(
+                        offset: Offset(0, 2),
+                        blurRadius: 4,
+                        color: Colors.black45,
                       ),
                     ],
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.chat_bubble_outline,
-                        color: Colors.red.shade900,
-                        size: 20,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  location!,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    color: Colors.white70,
+                    shadows: [
+                      Shadow(
+                        offset: Offset(0, 2),
+                        blurRadius: 4,
+                        color: Colors.black45,
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Say Hello',
-                        style: TextStyle(
-                          color: Colors.red.shade900,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                    ],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(
+                  height: 24,
+                ),
+                GestureDetector(
+                  onTap: () {},
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.red.shade900),
+                      borderRadius: BorderRadius.circular(24),
+                      gradient: LinearGradient(
+                        colors: [Colors.red.shade50, Colors.red.shade300],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.red.shade100.withOpacity(0.6),
+                          blurRadius: 8,
+                          offset: const Offset(2, 4),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.chat_bubble_outline,
+                          color: Colors.red.shade900,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Say Hello',
+                          style: TextStyle(
+                            color: Colors.red.shade900,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              )
-            ],
+                )
+              ],
+            ),
           ),
         ),
 
@@ -187,7 +189,7 @@ class ProfileState extends State<ProfilePage> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              about,
+                              about!,
                               style: const TextStyle(
                                 fontSize: 16,
                                 color: Colors.black,
@@ -206,7 +208,7 @@ class ProfileState extends State<ProfilePage> {
                             Wrap(
                               direction: Axis.horizontal,
                               spacing: 8,
-                              children: interest
+                              children: interest!
                                   .map((label) => InterestChip(label: label))
                                   .toList(),
                             ),
@@ -226,7 +228,7 @@ class ProfileState extends State<ProfilePage> {
                                 ProfileInfoTile(
                                   icon: Icons.calendar_month_outlined,
                                   title: 'Age',
-                                  value: '${age.toString()} years old',
+                                  value: age.toString(),
                                 ),
                                 // Location Container
                                 ProfileInfoTile(

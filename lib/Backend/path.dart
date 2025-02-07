@@ -18,4 +18,6 @@ class ApiPath {
   static uploadImage() => '$baseURL/azure/upload';
 
   static getProfiles() => '$baseURL/match/get';
+
+  static swipeResult() => '$baseURL/match/swipe';
 }

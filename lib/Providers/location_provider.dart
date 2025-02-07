@@ -10,7 +10,6 @@ class LocationProvider with ChangeNotifier {
 
   void updateLocation(LocationData locationData) {
     _currentLocation = locationData;
-    logger.d("Updated Location: Latitude = ${locationData.latitude}, Longitude = ${locationData.longitude}");
     notifyListeners(); // Notify listeners about the update
   }
 }

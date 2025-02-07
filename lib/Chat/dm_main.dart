@@ -1,14 +1,18 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:web_socket_channel/io.dart';
+import 'package:intl/intl.dart';
+import '../Backend/chat_service.dart';
 
 class DirectMessage extends StatefulWidget {
   final String profilepicurl;
   final String name;
+  final String roomName;
 
   const DirectMessage({
     super.key,
     required this.profilepicurl,
     required this.name,
+    required this.roomName,
   });
 
   @override
@@ -16,7 +20,7 @@ class DirectMessage extends StatefulWidget {
 }
 
 class _DirectMessageState extends State<DirectMessage> {
-  late final IOWebSocketChannel _channel;
+  late final ChatService _chatService;
   final TextEditingController _messageController = TextEditingController();
   final List<Map<String, String>> _messages = [];
   bool _isTyping = false;
@@ -25,17 +29,52 @@ class _DirectMessageState extends State<DirectMessage> {
   @override
   void initState() {
     super.initState();
+    _chatService = ChatService();
+    _chatService.connect(widget.roomName);
 
-    // Connect to WebSocket on page load
-    _channel =
-        IOWebSocketChannel.connect(Uri.parse('wss://echo.websocket.events'));
+    // Preload some random messages
+    _messages.addAll([
+      {
+        'sender': widget.name,
+        'text': 'Hey! How are you?',
+        'time': DateTime.now().subtract(const Duration(minutes: 5)).toString(),
+        'read': 'true'
+      },
+      {
+        'sender': 'Me',
+        'text': 'I\'m good! Just working on some code.',
+        'time': DateTime.now().subtract(const Duration(minutes: 4)).toString(),
+        'read': 'true'
+      },
+      {
+        'sender': widget.name,
+        'text': 'Nice! What are you building?',
+        'time': DateTime.now().subtract(const Duration(minutes: 3)).toString(),
+        'read': 'true'
+      },
+      {
+        'sender': 'Me',
+        'text': 'A chat app. Trying to improve it.',
+        'time': DateTime.now().subtract(const Duration(minutes: 2)).toString(),
+        'read': 'true'
+      },
+      {
+        'sender': widget.name,
+        'text': 'That\'s awesome! Keep going.',
+        'time': DateTime.now().subtract(const Duration(minutes: 1)).toString(),
+        'read': 'true'
+      },
+    ]);
 
-    _channel.stream.listen((message) {
+    // Listen for incoming messages
+    _chatService.channel.stream.listen((message) {
+      final data = jsonDecode(message);
       setState(() {
         _messages.add({
-          'sender': widget.name,
-          'text': message,
+          'sender': data['sender'] ?? widget.name,
+          'text': data['message'] ?? '',
           'time': DateTime.now().toString(),
+          'read': 'false',
         });
       });
     });
@@ -43,41 +82,45 @@ class _DirectMessageState extends State<DirectMessage> {
 
   @override
   void dispose() {
-    _channel.sink.close(); // Close the WebSocket connection
+    _chatService.channel.sink.close();
     _messageController.dispose();
     super.dispose();
   }
 
   void _sendMessage() {
     if (_messageController.text.isNotEmpty) {
-      _channel.sink.add(_messageController.text); // Send message over WebSocket
+      _chatService.sendMessage(_messageController.text, 'Me', widget.name);
+
       setState(() {
         _messages.add({
           'sender': 'Me',
           'text': _messageController.text,
           'time': DateTime.now().toString(),
+          'read': 'false',
         });
-        _isTyping = false; // Reset typing status
+        _isTyping = false;
+        status = 'Online';
       });
-      _messageController.clear(); // Clear message input field
+
+      _messageController.clear();
     }
   }
 
-  void _onTyping() {
-    if (!_isTyping) {
-      setState(() {
-        _isTyping = true; // Mark as typing when user starts typing
-        status = 'Typing...';
-      });
-    }
+  void _onTyping(String text) {
+    setState(() {
+      _isTyping = text.isNotEmpty;
+      status = _isTyping ? 'Typing...' : 'Online';
+    });
+
+    _chatService.updateTypingStatus('Me', widget.name, _isTyping);
   }
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       body: Stack(
         children: [
-          // Background Layer
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
@@ -86,8 +129,6 @@ class _DirectMessageState extends State<DirectMessage> {
               ),
             ),
           ),
-
-          // Foreground Layer (Messages and Input Box)
           Column(
             children: [
               Container(
@@ -103,42 +144,31 @@ class _DirectMessageState extends State<DirectMessage> {
                     ),
                     CircleAvatar(
                       radius: 25,
-                      child: CircleAvatar(
-                        radius: 23,
-                        backgroundImage: widget.profilepicurl.isNotEmpty
-                            ? AssetImage(widget.profilepicurl)
-                            : const AssetImage('assets/defaultprofile.png'),
-                      ),
+                      backgroundImage: widget.profilepicurl.isNotEmpty
+                          ? AssetImage(widget.profilepicurl)
+                          : const AssetImage('assets/defaultprofile.png')
+                              as ImageProvider,
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            widget.name,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          Text(widget.name,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold)),
                           const SizedBox(height: 2),
-                          Text(
-                            status,
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 14,
-                            ),
-                          ),
+                          Text(status,
+                              style: const TextStyle(
+                                  color: Colors.grey, fontSize: 14)),
                         ],
                       ),
                     ),
                   ],
                 ),
               ),
-
-              // Messages List
               Expanded(
                 child: ListView.builder(
                   itemCount: _messages.length,
@@ -154,15 +184,13 @@ class _DirectMessageState extends State<DirectMessage> {
                       children: [
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Text(
-                            message['sender']!,
-                            style: TextStyle(
-                              color:
-                                  isMe ? Colors.green[300] : Colors.grey[400],
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          child: Text(message['sender']!,
+                              style: TextStyle(
+                                  color: isMe
+                                      ? Colors.green[300]
+                                      : Colors.grey[400],
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold)),
                         ),
                         Align(
                           alignment: isMe
@@ -172,8 +200,8 @@ class _DirectMessageState extends State<DirectMessage> {
                             margin: const EdgeInsets.symmetric(vertical: 5),
                             padding: const EdgeInsets.all(10),
                             constraints: BoxConstraints(
-                              maxWidth: MediaQuery.of(context).size.width * 0.7,
-                            ),
+                                maxWidth:
+                                    MediaQuery.of(context).size.width * 0.7),
                             decoration: BoxDecoration(
                               color: isMe
                                   ? Colors.green[300]?.withOpacity(0.9)
@@ -183,18 +211,24 @@ class _DirectMessageState extends State<DirectMessage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  message['text']!,
-                                  style: const TextStyle(color: Colors.white),
+                                Row(
+                                  children: [
+                                    Text(message['text']!,
+                                        style: const TextStyle(
+                                            color: Colors.white)),
+                                    if (message['read'] == 'true')
+                                      const Icon(Icons.check,
+                                          color: Colors.blue, size: 16)
+                                  ],
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.only(top: 4.0),
                                   child: Text(
-                                    message['time']!,
+                                    DateFormat('h:mm a').format(
+                                        DateTime.parse(message['time']!)),
                                     style: TextStyle(
-                                      color: Colors.white.withOpacity(0.6),
-                                      fontSize: 10,
-                                    ),
+                                        color: Colors.white.withOpacity(0.6),
+                                        fontSize: 10),
                                   ),
                                 ),
                               ],
@@ -206,48 +240,32 @@ class _DirectMessageState extends State<DirectMessage> {
                   },
                 ),
               ),
-
-              // Input Bar
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: Row(
                   children: [
                     Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: TextField(
-                          controller: _messageController,
-                          style: const TextStyle(color: Colors.white),
-                          onChanged: (text) {
-                            if (text.isNotEmpty) {
-                              _onTyping(); // Mark user as typing
-                            } else {
-                              setState(() {
-                                _isTyping = false;
-                                status = 'Online'; // Reset typing status
-                              });
-                            }
-                          },
-                          decoration: InputDecoration(
-                            hintText: 'Type a message...',
-                            hintStyle: const TextStyle(color: Colors.white54),
-                            filled: true,
-                            fillColor: Colors.black.withOpacity(0.4),
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(30),
-                              borderSide: BorderSide.none,
-                            ),
+                      child: TextField(
+                        controller: _messageController,
+                        style: const TextStyle(color: Colors.white),
+                        onChanged: _onTyping,
+                        decoration: InputDecoration(
+                          hintText: 'Type a message...',
+                          hintStyle: const TextStyle(color: Colors.white54),
+                          filled: true,
+                          fillColor: Colors.black.withOpacity(0.4),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30),
+                            borderSide: BorderSide.none,
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
                     IconButton(
-                      onPressed: _sendMessage, // Send the message
-                      icon: const Icon(Icons.send),
-                      color: Colors.green[300],
+                      onPressed: _sendMessage,
+                      icon: const Icon(Icons.send, color: Colors.green),
                     ),
                   ],
                 ),

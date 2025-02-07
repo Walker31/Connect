@@ -1,11 +1,14 @@
 import 'package:connect/Backend/profile_api.dart';
+import 'package:connect/Backend/swiping.dart';
 import 'package:connect/Home/partner_card.dart';
 import 'package:connect/Matches/profile.dart';
 import 'package:connect/Model/profile.dart';
+import 'package:connect/Providers/profile_provider.dart';
 import 'package:connect/Settings/settings_main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
 import 'package:logger/logger.dart';
+import 'package:provider/provider.dart';
 
 import '../Components/home_button.dart';
 
@@ -20,27 +23,24 @@ class HomeState extends State<HomePage> with SingleTickerProviderStateMixin {
   Logger logger = Logger();
   List<Profile> profiles = [];
   final ProfileApi _profileApi = ProfileApi();
-  int index = 0;
-
-  // Animation Controllers
   late AnimationController _animationController;
   bool isSwiping = false;
   double dragStartX = 0.0;
 
   @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  @override
   void initState() {
+    super.initState();
     fetchProfiles();
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
-    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   Future<void> fetchProfiles() async {
@@ -51,10 +51,24 @@ class HomeState extends State<HomePage> with SingleTickerProviderStateMixin {
       });
     } catch (e) {
       logger.e('Error fetching profiles: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Failed to load profiles. Please try again.')),
+        );
+      }
     }
   }
 
-  void swipeCard(int index) {
+  Future<void> swipe(String userId, String partnerId, String action) async {
+    try {
+      await Match().swipeResult(context, userId, partnerId, action);
+    } catch (e) {
+      logger.e('Error during swiping: $e');
+    }
+  }
+
+  void removeProfileAtIndex(int index) {
     if (profiles.isNotEmpty) {
       setState(() {
         profiles.removeAt(index);
@@ -64,6 +78,8 @@ class HomeState extends State<HomePage> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<ProfileProvider>(context, listen: false);
+
     return Scaffold(
       appBar: AppBar(
         actions: [
@@ -74,10 +90,7 @@ class HomeState extends State<HomePage> with SingleTickerProviderStateMixin {
             ),
             child: IconButton(
               onPressed: () {},
-              icon: const Icon(
-                Icons.notifications_none_rounded,
-                size: 32,
-              ),
+              icon: const Icon(Icons.notifications_none_rounded, size: 32),
               color: Colors.red.shade900,
             ),
           ),
@@ -88,18 +101,11 @@ class HomeState extends State<HomePage> with SingleTickerProviderStateMixin {
                 MaterialPageRoute(builder: (context) => const Settings()),
               );
             },
-            icon: const Icon(
-              Icons.person,
-              size: 32,
-            ),
+            icon: const Icon(Icons.person, size: 32),
             color: Colors.red.shade900,
           ),
         ],
-        leading: Icon(
-          Icons.heart_broken,
-          color: Colors.red.shade900,
-          size: 32,
-        ),
+        leading: Icon(Icons.heart_broken, color: Colors.red.shade900, size: 32),
         title: Text(
           'Connect',
           style: TextStyle(
@@ -112,31 +118,20 @@ class HomeState extends State<HomePage> with SingleTickerProviderStateMixin {
       ),
       body: Column(
         children: [
-          const SizedBox(
-            height: 40,
-          ),
+          const SizedBox(height: 40),
           Expanded(
             child: profiles.isEmpty
-                ? Center(
-                    child: Text(
-                      "No more matches found near you.",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade700,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
+                ? const Center(
+                    child: Text('No more Matches'),
                   )
                 : Stack(
                     children: profiles
                         .asMap()
                         .entries
                         .map((entry) {
-                          index = entry.key;
+                          int index = entry.key;
                           Profile profile = entry.value;
 
-                          // Calculate animation position
                           double topPosition = 10.0 + index * 10;
                           double horizontalPosition = 10.0 + index * 10;
                           double opacityValue =
@@ -154,45 +149,36 @@ class HomeState extends State<HomePage> with SingleTickerProviderStateMixin {
                               child: GestureDetector(
                                 onDoubleTap: () {
                                   Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              ProfilePage(
-                                                profile: profile,
-                                                
-                                              )));
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ProfilePage(
+                                        profile: profile,
+                                      ),
+                                    ),
+                                  );
                                 },
                                 onHorizontalDragStart: (details) {
                                   dragStartX = details.globalPosition.dx;
                                 },
-                                onHorizontalDragUpdate: (details) {
-                                  setState(() {
-                                    isSwiping = true;
-                                  });
-                                },
                                 onHorizontalDragEnd: (details) {
-                                  if (isSwiping) {
+                                  if (profiles.isNotEmpty) {
                                     setState(() {
                                       profiles.removeAt(index);
-                                      isSwiping = false;
                                     });
                                   }
                                 },
-                                child: PartnerCard(
-                                  profile: profile,
-                                ),
+                                child: PartnerCard(profile: profile),
                               ),
                             ),
                           );
                         })
                         .toList()
-                        .reversed // Ensure topmost card is interactive
+                        .reversed
                         .toList(),
                   ),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               HomeButton(
                 color: const Color.fromRGBO(198, 40, 40, 1).withOpacity(0.7),
@@ -200,16 +186,17 @@ class HomeState extends State<HomePage> with SingleTickerProviderStateMixin {
                   icon: SvgIconData('assets/svgIcons/cross.svg'),
                 ),
                 onPressed: () {
-                  if (profiles.isNotEmpty) {
-                    setState(() {
-                      profiles.removeAt(index);
-                    });
+                  if (provider.profile?.id != null && profiles.isNotEmpty) {
+                    swipe(
+                      provider.profile!.id.toString(),
+                      profiles.first.id.toString(),
+                      'dislike',
+                    );
+                    removeProfileAtIndex(0);
                   }
                 },
               ),
-              const SizedBox(
-                width: 20,
-              ),
+              const SizedBox(width: 20),
               HomeButton(
                 color: Colors.red.shade800.withOpacity(0.7),
                 icon: const Icon(Icons.star),
@@ -217,17 +204,18 @@ class HomeState extends State<HomePage> with SingleTickerProviderStateMixin {
                   // Handle "star" functionality
                 },
               ),
-              const SizedBox(
-                width: 20,
-              ),
+              const SizedBox(width: 20),
               HomeButton(
                 color: Colors.red.shade800.withOpacity(0.7),
                 icon: const Icon(Icons.favorite),
                 onPressed: () {
-                  if (profiles.isNotEmpty) {
-                    setState(() {
-                      profiles.removeAt(index);
-                    });
+                  if (provider.profile?.id != null && profiles.isNotEmpty) {
+                    swipe(
+                      provider.profile!.id.toString(),
+                      profiles.first.id.toString(),
+                      'like',
+                    );
+                    removeProfileAtIndex(0);
                   }
                 },
               ),

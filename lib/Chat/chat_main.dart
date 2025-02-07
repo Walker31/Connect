@@ -15,18 +15,21 @@ class _ChatMainState extends State<ChatMain> {
   TextEditingController searchController = TextEditingController();
   List<ChatRoom> chatRooms = [
     ChatRoom(
+      roomName: '2',
       name: 'John Doe',
       profilePicUrl: 'assets/dp/2.jpg',
       lastMessage: 'Hey, how are you?',
       lastMessageTime: DateTime.now().subtract(const Duration(minutes: 5)),
     ),
     ChatRoom(
+      roomName: '3',
       name: 'Jane Smith',
       profilePicUrl: 'assets/dp/4.jpg',
       lastMessage: 'Let\'s catch up soon!',
       lastMessageTime: DateTime.now().subtract(const Duration(hours: 1)),
     ),
     ChatRoom(
+      roomName: '1',
       name: 'Alice Johnson',
       profilePicUrl: 'assets/dp/5.jpg',
       lastMessage: 'Got your message!',
@@ -158,6 +161,7 @@ class _ChatMainState extends State<ChatMain> {
                         context,
                         MaterialPageRoute(
                             builder: (context) => DirectMessage(
+                                roomName: chatRoom.roomName,
                                 profilepicurl: chatRoom.profilePicUrl,
                                 name: chatRoom.name)));
                   },
@@ -186,12 +190,14 @@ class _ChatMainState extends State<ChatMain> {
 }
 
 class ChatRoom {
+  final String roomName;
   final String name;
   final String profilePicUrl;
   final String lastMessage;
   final DateTime lastMessageTime;
 
   ChatRoom({
+    required this.roomName,
     required this.name,
     required this.profilePicUrl,
     required this.lastMessage,

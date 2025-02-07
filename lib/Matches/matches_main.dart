@@ -10,12 +10,14 @@ class Match extends StatefulWidget {
 }
 
 class MatchState extends State<Match> {
-  final int matchCount = 4; // Change this value to dynamically update the count
+  final int matchCount = 5; // Change this value to dynamically update the count
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         centerTitle: true,
         title: const Text('Matches',
             style: TextStyle(
