@@ -1,53 +1,47 @@
-import 'package:connect/Backend/profile_api.dart';
-import 'package:connect/Backend/swiping.dart';
-import 'package:connect/Home/partner_card.dart';
-import 'package:connect/Matches/profile.dart';
-import 'package:connect/Model/profile.dart';
-import 'package:connect/Providers/profile_provider.dart';
-import 'package:connect/Settings/settings_main.dart';
 import 'package:flutter/material.dart';
+import 'package:connect/Home/partner_card.dart';
+import 'package:connect/Model/profile.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
-
+import '../Backend/profile_api.dart';
+import '../Providers/profile_provider.dart';
+import '../Settings/settings_main.dart';
 import '../Components/home_button.dart';
+import '../Backend/swiping.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => HomeState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class HomeState extends State<HomePage> with SingleTickerProviderStateMixin {
+class _HomePageState extends State<HomePage> {
   Logger logger = Logger();
   List<Profile> profiles = [];
   final ProfileApi _profileApi = ProfileApi();
-  late AnimationController _animationController;
-  bool isSwiping = false;
-  double dragStartX = 0.0;
+
+  double slideDirection = 0;
+  bool animateCard = true;
 
   @override
   void initState() {
     super.initState();
-    fetchProfiles();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
+    fetchprofiles();
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
     super.dispose();
   }
 
-  Future<void> fetchProfiles() async {
+  Future<void> fetchprofiles() async {
     try {
-      final fetchedProfiles = await _profileApi.getProfiles(context);
+      final fetchedprofies = await _profileApi.getProfiles(context);
       setState(() {
-        profiles = fetchedProfiles;
+        profiles = fetchedprofies;
       });
     } catch (e) {
       logger.e('Error fetching profiles: $e');
@@ -64,14 +58,25 @@ class HomeState extends State<HomePage> with SingleTickerProviderStateMixin {
     try {
       await Match().swipeResult(context, userId, partnerId, action);
     } catch (e) {
-      logger.e('Error during swiping: $e');
+      logger.e('Error during swiping : $e');
     }
   }
 
-  void removeProfileAtIndex(int index) {
+  void removeProfile(int direction) {
     if (profiles.isNotEmpty) {
       setState(() {
-        profiles.removeAt(index);
+        slideDirection = direction.toDouble();
+        animateCard = false;
+      });
+
+      Future.delayed(const Duration(milliseconds: 400), () {
+        if (profiles.isNotEmpty) {
+          setState(() {
+            profiles.removeAt(0);
+            slideDirection = 0;
+            animateCard = true;
+          });
+        }
       });
     }
   }
@@ -79,20 +84,13 @@ class HomeState extends State<HomePage> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<ProfileProvider>(context, listen: false);
-
     return Scaffold(
       appBar: AppBar(
         actions: [
-          Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.red.shade900),
-              shape: BoxShape.circle,
-            ),
-            child: IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.notifications_none_rounded, size: 32),
-              color: Colors.red.shade900,
-            ),
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.notifications_none_rounded, size: 32),
+            color: Colors.red.shade900,
           ),
           IconButton(
             onPressed: () {
@@ -117,71 +115,32 @@ class HomeState extends State<HomePage> with SingleTickerProviderStateMixin {
         ),
       ),
       body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizedBox(height: 40),
           Expanded(
-            child: profiles.isEmpty
-                ? const Center(
-                    child: Text('No more Matches'),
+            child: profiles.isNotEmpty
+                ? SizedBox(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: PartnerCard(profile: profiles.first)
+                          .animate(target: animateCard ? 1 : 0)
+                          .fadeIn(duration: 400.ms)
+                          .scale(
+                              begin: const Offset(0.8, 0.8),
+                              end: const Offset(1, 1))
+                          .then() // Start next animation
+                          .slideX(
+                              begin: slideDirection, end: 0, duration: 400.ms),
+                    ),
                   )
-                : Stack(
-                    children: profiles
-                        .asMap()
-                        .entries
-                        .map((entry) {
-                          int index = entry.key;
-                          Profile profile = entry.value;
-
-                          double topPosition = 10.0 + index * 10;
-                          double horizontalPosition = 10.0 + index * 10;
-                          double opacityValue =
-                              1 - (index * 0.1).clamp(0.0, 1.0);
-
-                          return AnimatedPositioned(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                            top: topPosition,
-                            left: horizontalPosition,
-                            right: horizontalPosition,
-                            child: AnimatedOpacity(
-                              duration: const Duration(milliseconds: 300),
-                              opacity: opacityValue,
-                              child: GestureDetector(
-                                onDoubleTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => ProfilePage(
-                                        profile: profile,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                onHorizontalDragStart: (details) {
-                                  dragStartX = details.globalPosition.dx;
-                                },
-                                onHorizontalDragEnd: (details) {
-                                  if (profiles.isNotEmpty) {
-                                    setState(() {
-                                      profiles.removeAt(index);
-                                    });
-                                  }
-                                },
-                                child: PartnerCard(profile: profile),
-                              ),
-                            ),
-                          );
-                        })
-                        .toList()
-                        .reversed
-                        .toList(),
-                  ),
+                //.fadeOut(curve: Curves.easeIn, duration: 400.ms)
+                : const Center(child: Text("No more profiles")),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               HomeButton(
-                color: const Color.fromRGBO(198, 40, 40, 1).withOpacity(0.7),
+                color: Colors.red,
                 icon: const SvgIcon(
                   icon: SvgIconData('assets/svgIcons/cross.svg'),
                 ),
@@ -192,35 +151,29 @@ class HomeState extends State<HomePage> with SingleTickerProviderStateMixin {
                       profiles.first.id.toString(),
                       'dislike',
                     );
-                    removeProfileAtIndex(0);
+                    removeProfile(1);
                   }
-                },
+                  removeProfile(-1);
+                }, // Slide left on cross
               ),
               const SizedBox(width: 20),
               HomeButton(
-                color: Colors.red.shade800.withOpacity(0.7),
-                icon: const Icon(Icons.star),
-                onPressed: () {
-                  // Handle "star" functionality
-                },
-              ),
+                  color: Colors.red,
+                  icon: const Icon(color: Colors.white, Icons.favorite),
+                  onPressed: () {
+                    if (provider.profile?.id != null && profiles.isNotEmpty) {
+                      swipe(
+                        provider.profile!.id.toString(),
+                        profiles.first.id.toString(),
+                        'like',
+                      );
+                      removeProfile(1);
+                    }
+                  }),
               const SizedBox(width: 20),
-              HomeButton(
-                color: Colors.red.shade800.withOpacity(0.7),
-                icon: const Icon(Icons.favorite),
-                onPressed: () {
-                  if (provider.profile?.id != null && profiles.isNotEmpty) {
-                    swipe(
-                      provider.profile!.id.toString(),
-                      profiles.first.id.toString(),
-                      'like',
-                    );
-                    removeProfileAtIndex(0);
-                  }
-                },
-              ),
             ],
           ),
+          const SizedBox(height: 20),
         ],
       ),
     );

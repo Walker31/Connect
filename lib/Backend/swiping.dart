@@ -28,6 +28,7 @@ class Match {
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
+        logger.d(responseData);
 
         if (responseData['status'] == 'success') {
           // Check if the response indicates a match

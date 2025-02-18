@@ -16,95 +16,97 @@ class PartnerState extends State<PartnerCard> {
   Widget build(BuildContext context) {
     Profile match = widget.profile;
     return Container(
-      margin: const EdgeInsets.all(
-          16), // Add margin to provide space around the card
+      width: double.infinity,
+      margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.2),
             blurRadius: 8,
-            offset: const Offset(0, 4), // Shadow position
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(
-            16), // Clip the image to match the border radius
-        child: Stack(
-          children: [
-            // Background image with doubled height
-            Image.asset(
-              'assets/mainpic.jpg',
-              width: double.infinity, // Make image fill the container
-              height: 500, // Doubled the height for a larger image
-              fit: BoxFit.cover, // Ensures the image is scaled properly
-            ),
-            // Overlay content (Icons and Text)
-            Positioned(
-              bottom: 16,
-              left: 16,
-              right: 16,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Social Media Icons (Twitter & Instagram)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        onPressed: () {},
-                        icon: const SvgIcon(
-                            icon: SvgIconData('assets/insta.svg')),
-                        iconSize: 30,
-                        color: Colors.white,
-                      ),
-                      IconButton(
-                        onPressed: () {},
-                        icon: const SvgIcon(
-                            icon: SvgIconData('assets/twitter.svg')),
-                        iconSize: 30,
-                        color: Colors.white,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16), // Space between icons and text
-                  // Name and Age Text
-                  Text(
-                    '${match.name}, ${match.age}',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      shadows: [
-                        Shadow(
-                          offset: const Offset(1, 1),
-                          blurRadius: 4,
-                          color: Colors.black.withOpacity(0.5),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  // Location Text
-                  Text(
-                    match.location.toString(),
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white70,
-                      shadows: [
-                        Shadow(
-                          offset: const Offset(1, 1),
-                          blurRadius: 4,
-                          color: Colors.black.withOpacity(0.5),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+        borderRadius: BorderRadius.circular(16),
+        child: AspectRatio(
+          aspectRatio: 9 / 16,
+          child: Stack(
+            children: [
+              // Background image that fits correctly
+              Positioned.fill(
+                child: Image.asset(
+                  'assets/mainpic.jpg',
+                  fit: BoxFit.cover,
+                ),
               ),
-            ),
-          ],
+              // Overlay content
+              Positioned(
+                bottom: 16,
+                left: 16,
+                right: 16,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Social Media Icons
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          onPressed: () {},
+                          icon: const SvgIcon(
+                              icon: SvgIconData('assets/insta.svg')),
+                          iconSize: 24, // Reduce icon size slightly
+                          color: Colors.white,
+                        ),
+                        IconButton(
+                          onPressed: () {},
+                          icon: const SvgIcon(
+                              icon: SvgIconData('assets/twitter.svg')),
+                          iconSize: 24,
+                          color: Colors.white,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    // Name and Age Text
+                    Text(
+                      '${match.name}, ${match.age}',
+                      style: TextStyle(
+                        fontSize: 18, // Slightly smaller text
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        shadows: [
+                          Shadow(
+                            offset: const Offset(1, 1),
+                            blurRadius: 4,
+                            color: Colors.black.withOpacity(0.5),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Location Text
+                    Text(
+                      match.location.toString(),
+                      style: TextStyle(
+                        fontSize: 14, // Make the location text smaller
+                        color: Colors.white70,
+                        shadows: [
+                          Shadow(
+                            offset: const Offset(1, 1),
+                            blurRadius: 4,
+                            color: Colors.black.withOpacity(0.5),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
