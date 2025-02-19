@@ -41,15 +41,9 @@ class Match {
             );
           } else {
             logger.i('Successfully swiped $action for partner: $partnerId');
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('You $action the user successfully!')),
-            );
           }
         } else {
           logger.e('Failed to swipe: ${responseData['message']}');
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to perform the action.')),
-          );
         }
       } else {
         logger.e('Error: Received status code ${response.statusCode}');

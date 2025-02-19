@@ -1,5 +1,5 @@
 class ApiPath {
-  static const baseURL = 'https://8751-14-139-162-2.ngrok-free.app';
+  static const baseURL = 'http://10.0.2.2:8000';
 
   static login() => '$baseURL/user/login/';
 
