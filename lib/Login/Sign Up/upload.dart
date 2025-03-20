@@ -1,10 +1,10 @@
 import 'dart:io';
+import 'package:connect/Login/success_page.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:logger/logger.dart';
+import 'package:reorderable_grid/reorderable_grid.dart';
 import 'package:step_progress_indicator/step_progress_indicator.dart';
 import '../../Backend/images.dart';
-import '../../Base Scaffold/base.dart';
 import '../../Components/back.dart';
 
 class UploadImage extends StatefulWidget {
@@ -17,25 +17,29 @@ class UploadImage extends StatefulWidget {
 }
 
 class _UploadImageState extends State<UploadImage> {
-  File? _image;
   final ImagePicker _picker = ImagePicker();
-  Logger logger = Logger();
-  bool isLoading = false;
+  final List<File?> _images = List.filled(6, null);
   bool _isUploading = false;
 
-  Future<void> _pickImage() async {
+  Future<void> _pickImage(int index) async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
-        _image = File(pickedFile.path);
+        _images[index] = File(pickedFile.path);
       });
     }
   }
 
-  Future<void> _uploadImage() async {
-    if (_image == null) {
+  Future<void> _register() async {
+    _uploadImages();
+    
+  }
+
+  Future<void> _uploadImages() async {
+    if (_images.every((image) => image == null)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select an image to upload')),
+        const SnackBar(
+            content: Text('Please select at least one image to upload')),
       );
       return;
     }
@@ -44,14 +48,17 @@ class _UploadImageState extends State<UploadImage> {
       _isUploading = true;
     });
 
-    bool success = await ImageUploadService.uploadImage(_image!);
+    bool success = await ImageUploadService.uploadImage(
+        _images.firstWhere((img) => img != null)!);
     if (success) {
       setState(() {
-        widget.formdata['uploadedImageUrl'] = _image!.path;
+        widget.formdata['uploadedImageUrl'] =
+            _images.firstWhere((img) => img != null)!.path;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Upload Successful!')),
-      );
+      Future.delayed(const Duration(seconds: 2));
+
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => const SuccessPage()));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Upload Failed!')),
@@ -63,143 +70,111 @@ class _UploadImageState extends State<UploadImage> {
     });
   }
 
+  void _reorderImages(int oldIndex, int newIndex) {
+    setState(() {
+      if (newIndex > oldIndex) {
+        newIndex -= 1;
+      }
+      final File? movedImage = _images.removeAt(oldIndex);
+      _images.insert(newIndex, movedImage);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: const Back(),
-        title: const Text('Upload Your Photo'),
-        centerTitle: true,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Center(
-              child: Column(
-                children: [
-                  _image != null
-                      ? Image.file(_image!, height: 200)
-                      : const Text('No image selected'),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _pickImage,
-                    child: const Text('Pick an Image'),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: _uploadImage,
-                    child: const Text('Upload Image'),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            StepProgressIndicator(
-              currentStep: 6,
-              selectedColor: Colors.red.shade900,
-              totalSteps: 6,
-              size: 10,
-              unselectedColor: Colors.grey.shade300,
-              roundedEdges: const Radius.circular(10),
-            ),
-            const SizedBox(height: 8),
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Step 6'),
-                Text('Step 6'),
-              ],
-            ),
-          ],
-        ),
-      ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.only(bottom: 16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             FloatingActionButton(
-              heroTag: 'upload',
-              elevation: 4,
-              foregroundColor: Colors.white,
               backgroundColor: Colors.red.shade900,
-              onPressed: _isUploading ? null : _uploadImage,
-              child: const Icon(Icons.cloud_upload),
-            ),
-            const SizedBox(height: 16),
-            FloatingActionButton(
-              heroTag: 'data',
-              elevation: 4,
               foregroundColor: Colors.white,
-              backgroundColor: Colors.red.shade900,
-              onPressed: _isUploading ? null : () => _showAlertDialog(context),
-              child: const Icon(Icons.arrow_forward),
+              onPressed: _isUploading ? null : _register,
+              child: _isUploading
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Icon(Icons.done),
             ),
+            const SizedBox(
+              height: 40,
+            )
           ],
         ),
       ),
-    );
-  }
-
-  void _showAlertDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      appBar: AppBar(
+        leading: const Back(),
+        title: const Text('Upload Your Photos'),
+        centerTitle: true,
+      ),
+      body: Container(
+        margin: const EdgeInsets.all(4),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
             children: [
-              const Icon(Icons.check, size: 40, color: Colors.green),
+              Expanded(
+                child: ReorderableGridView.builder(
+                  onReorder: _reorderImages,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                  ),
+                  itemCount: 6,
+                  itemBuilder: (context, index) {
+                    return GestureDetector(
+                      key: ValueKey(index),
+                      onTap: () => _pickImage(index),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        margin: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: _images[index] != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Image.file(
+                                  _images[index]!,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : const Icon(Icons.add_a_photo,
+                                size: 50, color: Colors.grey),
+                      ),
+                    );
+                  },
+                ),
+              ),
               const SizedBox(height: 16),
-              const Text(
-                'You\'re Verified!',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Your account is verified, let \'s start making friends!',
-                style: TextStyle(fontSize: 16, color: Colors.black54),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red.shade500,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  StepProgressIndicator(
+                    currentStep: 6,
+                    totalSteps: 6,
+                    size: 10,
+                    selectedColor: Colors.red.shade900,
+                    unselectedColor: const Color.fromARGB(255, 116, 97, 97),
+                    roundedEdges: const Radius.circular(10),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                ),
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => const Home()),
-                    (route) => false,
-                  );
-                },
-                child: const Text(
-                  'Get Started',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                  const SizedBox(height: 8),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Step 6'),
+                      Text('Step 6'),
+                    ],
                   ),
-                ),
+                ],
               ),
             ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

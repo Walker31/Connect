@@ -1,8 +1,8 @@
 import 'package:connect/Login/login_main.dart';
+import 'package:connect/Providers/chat_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'Backend/location.dart';
-//import 'Login/login_main.dart';
 import 'Providers/location_provider.dart';
 import 'Providers/profile_provider.dart';
 
@@ -24,18 +24,22 @@ Future<void> main() async {
   // Create an instance of ProfileProvider
   ProfileProvider profileProvider = ProfileProvider();
 
+  ChatRoomProvider chatprovider = ChatRoomProvider();
+
   runApp(App(
-    locationProvider: locationProvider,
-    profileProvider: profileProvider,
-  ));
+      locationProvider: locationProvider,
+      profileProvider: profileProvider,
+      chatRoomProvider: chatprovider));
 }
 
 class App extends StatelessWidget {
+  final ChatRoomProvider chatRoomProvider;
   final LocationProvider locationProvider;
   final ProfileProvider profileProvider;
 
   const App({
     super.key,
+    required this.chatRoomProvider,
     required this.locationProvider,
     required this.profileProvider,
   });
@@ -44,10 +48,13 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider<ChatRoomProvider>.value(value: chatRoomProvider),
         ChangeNotifierProvider<LocationProvider>.value(value: locationProvider),
         ChangeNotifierProvider<ProfileProvider>.value(value: profileProvider),
       ],
       child: MaterialApp(
+        themeMode: ThemeMode.system,
+        darkTheme: ThemeData(useMaterial3: true),
         debugShowCheckedModeBanner: false,
         title: 'Connect',
         theme: ThemeData(

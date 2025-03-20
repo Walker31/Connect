@@ -6,13 +6,13 @@ import '../Backend/chat_service.dart';
 class DirectMessage extends StatefulWidget {
   final String profilepicurl;
   final String name;
-  final String roomName;
+  final int id;
 
   const DirectMessage({
     super.key,
     required this.profilepicurl,
     required this.name,
-    required this.roomName,
+    required this.id,
   });
 
   @override
@@ -30,7 +30,7 @@ class _DirectMessageState extends State<DirectMessage> {
   void initState() {
     super.initState();
     _chatService = ChatService();
-    _chatService.connect(widget.roomName);
+    _chatService.connect(widget.id);
 
     // Preload some random messages
     _messages.addAll([
@@ -67,7 +67,7 @@ class _DirectMessageState extends State<DirectMessage> {
     ]);
 
     // Listen for incoming messages
-    _chatService.channel.stream.listen((message) {
+    _chatService.channel?.stream.listen((message) {
       final data = jsonDecode(message);
       setState(() {
         _messages.add({
@@ -82,7 +82,7 @@ class _DirectMessageState extends State<DirectMessage> {
 
   @override
   void dispose() {
-    _chatService.channel.sink.close();
+    _chatService.channel?.sink.close();
     _messageController.dispose();
     super.dispose();
   }

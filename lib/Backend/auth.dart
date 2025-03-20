@@ -1,9 +1,11 @@
+import 'package:connect/Backend/chat_service.dart';
 import 'package:connect/Backend/path.dart';
 import 'package:connect/Providers/profile_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../Model/profile.dart';
 
@@ -32,8 +34,21 @@ class Auth {
         // Parse the profile details from the response
         final responseData = jsonDecode(response.body);
 
+        final String authToken = responseData['token'];
+
+        //store token in sharedPreferences
+        final SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('auth_token', authToken);
+        await prefs.setBool('is_logged_in', true);
         // Assuming the profile details are in a "profile" key in the response JSON
         final profileData = responseData['profile'];
+        List<Map<String, dynamic>>? chatRooms =
+            await ChatService().fetchChatRooms(profileData['id']);
+        if (chatRooms != null) {
+          logger.d("Fetched Chat Rooms: $chatRooms");
+        } else {
+          logger.e("Failed to fetch chat rooms.");
+        }
 
         // Update the ProfileProvider with the extracted profile details
         final profileProvider =

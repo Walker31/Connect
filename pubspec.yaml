@@ -12,7 +12,7 @@ dependencies:
 
   cupertino_icons: ^1.0.8
   logger: ^2.5.0
-  shared_preferences: ^2.3.4
+  shared_preferences: ^2.5.2
   provider: ^6.1.2
   flutter_otp_text_field: ^1.4.0+2
   step_progress_indicator: ^1.0.2
@@ -31,6 +31,12 @@ dependencies:
   flutter_animate: ^4.5.2
   swipe_cards: ^2.0.0+1
   path: ^1.9.0
+  flutter_map: ^8.0.0
+  latlong2: ^0.9.1
+  animate_do: ^4.2.0
+  reorderable_grid: ^1.0.10
+  confetti: ^0.8.0
+  lottie: ^3.3.1
 
 dev_dependencies:
   flutter_test:
@@ -41,6 +47,7 @@ flutter:
   uses-material-design: true
   assets: 
       - assets/
+      - assets/animations/
       - assets/svgIcons/
       - assets/dp/
       - assets/fonts/

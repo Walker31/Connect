@@ -1,7 +1,12 @@
+import 'package:connect/Chat/dm_main.dart';
+import 'package:connect/Providers/profile_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
-import 'dm_main.dart';
+import 'package:logger/logger.dart';
+import 'package:provider/provider.dart';
+import 'dart:async';
+import '../Model/chat_room.dart';
+import '../Providers/chat_provider.dart';
 
 class ChatMain extends StatefulWidget {
   const ChatMain({super.key});
@@ -12,39 +17,41 @@ class ChatMain extends StatefulWidget {
 
 class _ChatMainState extends State<ChatMain> {
   bool isExpanded = false;
-  TextEditingController searchController = TextEditingController();
-  List<ChatRoom> chatRooms = [
-    ChatRoom(
-      roomName: '2',
-      name: 'John Doe',
-      profilePicUrl: 'assets/dp/2.jpg',
-      lastMessage: 'Hey, how are you?',
-      lastMessageTime: DateTime.now().subtract(const Duration(minutes: 5)),
-    ),
-    ChatRoom(
-      roomName: '3',
-      name: 'Jane Smith',
-      profilePicUrl: 'assets/dp/4.jpg',
-      lastMessage: 'Let\'s catch up soon!',
-      lastMessageTime: DateTime.now().subtract(const Duration(hours: 1)),
-    ),
-    ChatRoom(
-      roomName: '1',
-      name: 'Alice Johnson',
-      profilePicUrl: 'assets/dp/5.jpg',
-      lastMessage: 'Got your message!',
-      lastMessageTime: DateTime.now().subtract(const Duration(days: 1)),
-    ),
-  ];
-
+  final TextEditingController searchController = TextEditingController();
   String searchQuery = "";
+  Timer? _debounce;
+  Logger logger = Logger();
 
-  List<ChatRoom> get filteredChatRooms {
-    return chatRooms
-        .where((chat) =>
-            chat.name.toLowerCase().contains(searchQuery.toLowerCase()) ||
-            chat.lastMessage.toLowerCase().contains(searchQuery.toLowerCase()))
-        .toList();
+  @override
+  void initState() {
+    super.initState();
+    _fetchChatRooms();
+  }
+
+  void _fetchChatRooms() {
+    final profileProvider =
+        Provider.of<ProfileProvider>(context, listen: false);
+    final userId = profileProvider.profile?.id;
+
+    if (userId != null) {
+      Future.microtask(() async {
+        try {
+          await Provider.of<ChatRoomProvider>(context, listen: false)
+              .fetchChatRooms(userId);
+        } catch (e) {
+          logger.e("Error fetching chat rooms: $e");
+        }
+      });
+    }
+  }
+
+  void _onSearchChanged(String value) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      setState(() {
+        searchQuery = value.trim();
+      });
+    });
   }
 
   void toggleSearchBar() {
@@ -58,120 +65,207 @@ class _ChatMainState extends State<ChatMain> {
   }
 
   @override
+  void dispose() {
+    searchController.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.red.shade500,
-        title: const Text(
-          'Chat',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.2,
+      appBar: _buildAppBar(),
+      body: Column(
+        children: [
+          const SizedBox(
+            height: 100,
           ),
-        ),
-        actions: [
-          isExpanded
-              ? Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    width: 250,
-                    height: 40,
-                    child: TextField(
-                      controller: searchController,
-                      onChanged: (value) {
-                        setState(() {
-                          searchQuery = value;
-                        });
-                      },
-                      autofocus: true,
-                      decoration: InputDecoration(
-                        prefixIcon:
-                            const Icon(Icons.search, color: Colors.grey),
-                        suffixIcon: IconButton(
-                          icon: Icon(Icons.cancel, color: Colors.red.shade700),
-                          onPressed: toggleSearchBar,
-                        ),
-                        hintText: 'Search...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide.none,
-                        ),
-                        filled: true,
-                        fillColor: Colors.white,
-                      ),
-                    ),
-                  ),
-                )
-              : IconButton(
-                  icon: const Icon(Icons.search, color: Colors.white),
-                  onPressed: toggleSearchBar,
-                ),
+          Consumer<ChatRoomProvider>(
+            builder: (context, chatProvider, child) {
+              if (chatProvider.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (chatProvider.errorMessage.isNotEmpty) {
+                return _buildErrorUI();
+              }
+              List<ChatRoom> filteredChatRooms = chatProvider.chatRooms
+                  .where((chat) =>
+                      chat.participant2.name
+                          .toLowerCase()
+                          .contains(searchQuery.toLowerCase()) ||
+                      (chat.lastMessage
+                              ?.toLowerCase()
+                              .contains(searchQuery.toLowerCase()) ??
+                          false))
+                  .toList();
+              return Expanded(child: _buildChatList(filteredChatRooms));
+            },
+          ),
         ],
       ),
-      body: filteredChatRooms.isEmpty
-          ? Center(
-              child: Text(
-                'No Chats Found',
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            )
-          : ListView.separated(
-              itemCount: filteredChatRooms.length,
-              separatorBuilder: (context, index) => Divider(
-                color: Colors.grey.shade300,
-                thickness: 1,
-                indent: 70,
-                endIndent: 20,
-              ),
-              itemBuilder: (context, index) {
-                final chatRoom = filteredChatRooms[index];
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundImage: chatRoom.profilePicUrl.isNotEmpty
-                        ? AssetImage(chatRoom.profilePicUrl)
-                        : const AssetImage('assets/defaultprofile.png'),
-                    radius: 25,
-                  ),
-                  title: Text(
-                    chatRoom.name,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  subtitle: Text(
-                    chatRoom.lastMessage,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.grey),
-                  ),
-                  trailing: Text(
-                    _getMessageTime(chatRoom.lastMessageTime),
-                    style: const TextStyle(color: Colors.grey, fontSize: 12),
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => DirectMessage(
-                                roomName: chatRoom.roomName,
-                                profilepicurl: chatRoom.profilePicUrl,
-                                name: chatRoom.name)));
-                  },
-                );
-              },
-            ),
     );
   }
 
-  String _getMessageTime(DateTime messageTime) {
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: Colors.red.shade500,
+      title: const Text(
+        'Chat',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.2,
+        ),
+      ),
+      actions: [
+        isExpanded
+            ? _buildSearchField()
+            : IconButton(
+                icon: const Icon(Icons.search, color: Colors.white),
+                onPressed: toggleSearchBar,
+              ),
+      ],
+    );
+  }
+
+  Widget _buildSearchField() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        width: 250,
+        height: 40,
+        child: TextField(
+          controller: searchController,
+          onChanged: _onSearchChanged,
+          autofocus: true,
+          decoration: InputDecoration(
+            prefixIcon: const Icon(Icons.search, color: Colors.grey),
+            suffixIcon: IconButton(
+              icon: Icon(Icons.cancel, color: Colors.red.shade700),
+              onPressed: toggleSearchBar,
+            ),
+            hintText: 'Search...',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(20),
+              borderSide: BorderSide.none,
+            ),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorUI() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Failed to load chats',
+            style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 16,
+                fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+          ElevatedButton(
+            onPressed: _fetchChatRooms,
+            style:
+                ElevatedButton.styleFrom(backgroundColor: Colors.red.shade500),
+            child: const Text('Retry', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChatList(List<ChatRoom> chatRooms) {
+    if (chatRooms.isEmpty) {
+      return Center(
+        child: Text(
+          'No Chats Found',
+          style: TextStyle(
+              color: Colors.grey.shade600,
+              fontSize: 16,
+              fontWeight: FontWeight.bold),
+        ),
+      );
+    }
+
+    return ListView.separated(
+      itemCount: chatRooms.length,
+      separatorBuilder: (context, index) => Divider(
+        color: Colors.grey.shade300,
+        thickness: 1,
+        indent: 70,
+        endIndent: 20,
+      ),
+      itemBuilder: (context, index) {
+        final chatRoom = chatRooms[index];
+        return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (BuildContext context) => DirectMessage(
+                          profilepicurl: chatRoom.participant2.profilePicture,
+                          name: chatRoom.participant2.name,
+                          id: chatRoom.participant2.id)));
+            },
+            child: _buildChatTile(chatRoom));
+      },
+    );
+  }
+
+  Widget _buildChatTile(ChatRoom chatRoom) {
+    final displayName = chatRoom.participant2.name;
+    final profilePicUrl = chatRoom.participant2.profilePicture;
+    bool isNotEmpty = profilePicUrl.isNotEmpty;
+    ImageProvider profilePic;
+    try {
+      profilePic = const AssetImage('assets/defaultprofile.png');
+    } catch (e) {
+      logger.e(e);
+      profilePic = const AssetImage('assets/defaultprofile.png');
+    }
+
+    return ListTile(
+      leading: CircleAvatar(
+        onBackgroundImageError: (_, __) {
+          setState(() {
+            logger.d("Entering here");
+            isNotEmpty = false;
+          });
+        },
+        backgroundImage: isNotEmpty
+            ? profilePic
+            : const AssetImage('assets/defaultprofile.png'),
+        radius: 25,
+      ),
+      title: Text(
+        displayName,
+        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      ),
+      subtitle: Text(
+        chatRoom.lastMessage ?? "No messages yet",
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(color: Colors.grey),
+      ),
+      trailing: Text(
+        _getMessageTime(chatRoom.lastUpdated),
+        style: const TextStyle(color: Colors.grey, fontSize: 12),
+      ),
+    );
+  }
+
+  String _getMessageTime(DateTime? messageTime) {
+    if (messageTime == null) return "";
     final now = DateTime.now();
     final yesterday = now.subtract(const Duration(days: 1));
 
@@ -184,23 +278,7 @@ class _ChatMainState extends State<ChatMain> {
         messageTime.day == yesterday.day) {
       return 'Yesterday';
     } else {
-      return DateFormat('dd/MM').format(messageTime);
+      return DateFormat('dd/MM/yyyy').format(messageTime);
     }
   }
-}
-
-class ChatRoom {
-  final String roomName;
-  final String name;
-  final String profilePicUrl;
-  final String lastMessage;
-  final DateTime lastMessageTime;
-
-  ChatRoom({
-    required this.roomName,
-    required this.name,
-    required this.profilePicUrl,
-    required this.lastMessage,
-    required this.lastMessageTime,
-  });
 }

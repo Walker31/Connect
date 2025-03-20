@@ -1,5 +1,5 @@
 class ApiPath {
-  static const baseURL = 'http://10.0.2.2:8000';
+  static const baseURL = 'https://b827-14-139-162-2.ngrok-free.app';
 
   static login() => '$baseURL/user/login/';
 
@@ -20,4 +20,7 @@ class ApiPath {
   static getProfiles() => '$baseURL/match/get';
 
   static swipeResult() => '$baseURL/match/swipe';
+
+  static chatRooms(int userId) => '$baseURL/chat/rooms/?user_id=$userId';
+  static createChatRooms() => '$baseURL/chat/rooms/';
 }

@@ -1,3 +1,4 @@
+import 'package:connect/Home/match.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -33,12 +34,13 @@ class Match {
         if (responseData['status'] == 'success') {
           // Check if the response indicates a match
           final isMatch = responseData['match'] ?? false;
+          final name = responseData['name'];
 
           if (isMatch) {
-            logger.i('It\'s a match! Partner ID: $partnerId');
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('It\'s a match! 🎉')),
-            );
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => MatchPage(matchName: name)));
           } else {
             logger.i('Successfully swiped $action for partner: $partnerId');
           }

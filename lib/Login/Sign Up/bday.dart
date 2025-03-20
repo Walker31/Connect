@@ -57,11 +57,12 @@ class EnterBdayState extends State<EnterBday> {
             keyboardType: TextInputType.none,
             onTap: () async {
               DateTime? pickedDate = await showDatePicker(
-                context: context,
-                initialDate: DateTime.now(),
-                firstDate: DateTime(1900),
-                lastDate: DateTime.now(),
-              );
+                  context: context,
+                  initialDate: DateTime(DateTime.now().year - 18,
+                      DateTime.now().month, DateTime.now().day),
+                  firstDate: DateTime(1900),
+                  lastDate: DateTime(DateTime.now().year - 18,
+                      DateTime.now().month, DateTime.now().day));
               if (pickedDate != null) {
                 setState(() {
                   selectedDate = pickedDate;

@@ -1,3 +1,4 @@
+import 'package:connect/Home/filter.dart';
 import 'package:flutter/material.dart';
 import 'package:connect/Home/partner_card.dart';
 import 'package:connect/Model/profile.dart';
@@ -32,16 +33,11 @@ class _HomePageState extends State<HomePage> {
     fetchprofiles();
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
   Future<void> fetchprofiles() async {
     try {
-      final fetchedprofies = await _profileApi.getProfiles(context);
+      final fetchedprofiles = await _profileApi.getProfiles(context);
       setState(() {
-        profiles = fetchedprofies;
+        profiles = fetchedprofiles;
       });
     } catch (e) {
       logger.e('Error fetching profiles: $e');
@@ -58,7 +54,7 @@ class _HomePageState extends State<HomePage> {
     try {
       await Match().swipeResult(context, userId, partnerId, action);
     } catch (e) {
-      logger.e('Error during swiping : $e');
+      logger.e('Error during swiping: $e');
     }
   }
 
@@ -85,6 +81,24 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final provider = Provider.of<ProfileProvider>(context, listen: false);
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        elevation: 0,
+        backgroundColor: Colors.white.withOpacity(1),
+        foregroundColor: Colors.red,
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            builder: (context) => const FilterWidget(),
+          );
+        },
+        child: const Icon(
+          Icons.filter_list,
+          size: 28,
+        ),
+      ),
       appBar: AppBar(
         actions: [
           IconButton(
@@ -119,21 +133,18 @@ class _HomePageState extends State<HomePage> {
         children: [
           Expanded(
             child: profiles.isNotEmpty
-                ? SizedBox(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: PartnerCard(profile: profiles.first)
-                          .animate(target: animateCard ? 1 : 0)
-                          .fadeIn(duration: 400.ms)
-                          .scale(
-                              begin: const Offset(0.8, 0.8),
-                              end: const Offset(1, 1))
-                          .then() // Start next animation
-                          .slideX(
-                              begin: slideDirection, end: 0, duration: 400.ms),
-                    ),
+                ? Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: PartnerCard(profile: profiles.first)
+                        .animate(target: animateCard ? 1 : 0)
+                        .fadeIn(duration: 400.ms)
+                        .scale(
+                            begin: const Offset(0.8, 0.8),
+                            end: const Offset(1, 1))
+                        .then()
+                        .slideX(
+                            begin: slideDirection, end: 0, duration: 400.ms),
                   )
-                //.fadeOut(curve: Curves.easeIn, duration: 400.ms)
                 : const Center(child: Text("No more profiles")),
           ),
           Row(
@@ -154,22 +165,23 @@ class _HomePageState extends State<HomePage> {
                     removeProfile(1);
                   }
                   removeProfile(-1);
-                }, // Slide left on cross
+                },
               ),
               const SizedBox(width: 20),
               HomeButton(
-                  color: Colors.red,
-                  icon: const Icon(color: Colors.white, Icons.favorite),
-                  onPressed: () {
-                    if (provider.profile?.id != null && profiles.isNotEmpty) {
-                      swipe(
-                        provider.profile!.id.toString(),
-                        profiles.first.id.toString(),
-                        'like',
-                      );
-                      removeProfile(1);
-                    }
-                  }),
+                color: Colors.red,
+                icon: const Icon(color: Colors.white, Icons.favorite),
+                onPressed: () {
+                  if (provider.profile?.id != null && profiles.isNotEmpty) {
+                    swipe(
+                      provider.profile!.id.toString(),
+                      profiles.first.id.toString(),
+                      'like',
+                    );
+                    removeProfile(1);
+                  }
+                },
+              ),
               const SizedBox(width: 20),
             ],
           ),
