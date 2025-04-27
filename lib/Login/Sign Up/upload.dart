@@ -2,8 +2,10 @@ import 'dart:io';
 import 'package:connect/Login/success_page.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:logger/logger.dart';
 import 'package:reorderable_grid/reorderable_grid.dart';
 import 'package:step_progress_indicator/step_progress_indicator.dart';
+import '../../Backend/auth.dart';
 import '../../Backend/images.dart';
 import '../../Components/back.dart';
 
@@ -19,6 +21,7 @@ class UploadImage extends StatefulWidget {
 class _UploadImageState extends State<UploadImage> {
   final ImagePicker _picker = ImagePicker();
   final List<File?> _images = List.filled(6, null);
+  Logger logger = Logger();
   bool _isUploading = false;
 
   Future<void> _pickImage(int index) async {
@@ -32,7 +35,6 @@ class _UploadImageState extends State<UploadImage> {
 
   Future<void> _register() async {
     _uploadImages();
-    
   }
 
   Future<void> _uploadImages() async {
@@ -48,26 +50,42 @@ class _UploadImageState extends State<UploadImage> {
       _isUploading = true;
     });
 
-    bool success = await ImageUploadService.uploadImage(
-        _images.firstWhere((img) => img != null)!);
-    if (success) {
-      setState(() {
-        widget.formdata['uploadedImageUrl'] =
-            _images.firstWhere((img) => img != null)!.path;
-      });
-      Future.delayed(const Duration(seconds: 2));
+    List<String> uploadedUrls = [];
+    for (var image in _images) {
+      if (image != null) {
+        bool success = await ImageUploadService.uploadImage(image);
+        if (success) {
+          uploadedUrls.add(image.path);
+        }
+      }
+    }
 
-      Navigator.push(context,
-          MaterialPageRoute(builder: (context) => const SuccessPage()));
+    if (uploadedUrls.isNotEmpty) {
+      widget.formdata['uploadedImages'] = uploadedUrls;
+      logger.d(widget.formdata);
+      await _signupUser();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Upload Failed!')),
+        const SnackBar(content: Text('Image upload failed!')),
       );
     }
 
     setState(() {
       _isUploading = false;
     });
+  }
+
+  Future<void> _signupUser() async {
+    final response = await Auth().signup(context, widget.formdata);
+
+    if (response.statusCode == 200) {
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => const SuccessPage()));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Signup failed: ${response.body}')),
+      );
+    }
   }
 
   void _reorderImages(int oldIndex, int newIndex) {

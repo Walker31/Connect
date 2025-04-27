@@ -64,7 +64,7 @@ class GetNumberState extends State<GetNumber> {
                   onPressed: () {
                     if (numbercontroller.text.isNotEmpty &&
                         numbercontroller.text.length == 10) {
-                      formdata['phone_number'] = numbercontroller.text;
+                      formdata['phone_no'] = numbercontroller.text;
                       Navigator.push(
                           context,
                           MaterialPageRoute(

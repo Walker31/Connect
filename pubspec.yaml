@@ -37,6 +37,8 @@ dependencies:
   reorderable_grid: ^1.0.10
   confetti: ^0.8.0
   lottie: ^3.3.1
+  geolocator: ^13.0.3
+  geolocator_web: ^4.1.2
 
 dev_dependencies:
   flutter_test:

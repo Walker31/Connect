@@ -1,56 +1,77 @@
-# General
+# Flutter & Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+generated_plugin_registrant.dart
+
+# Symbolication and Obfuscation
+app.*.symbols
+app.*.map.json
+
+# iOS
+ios/Flutter/.last_build_id
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Runner.xcworkspace/
+ios/Runner.xcodeproj/project.xcworkspace/
+ios/DerivedData/
+*.xcworkspace
+
+# Android
+android/.gradle/
+android/app/debug/
+android/app/profile/
+android/app/release/
+android/local.properties
+
+# Web
+web/.dart_tool/
+
+# Linux
+linux/flutter/ephemeral/
+
+# MacOS
+macos/Flutter/ephemeral/
+macos/Pods/
+
+# Windows
+windows/flutter/ephemeral/
+
+# Fuchsia
+.fuchsia/
+
+# VS Code
+.vscode/
+
+# IntelliJ related
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Other common
 *.class
 *.log
 *.pyc
 *.swp
+*.bak
+*.tmp
+*.old
+*.lock
+*.cache
 .DS_Store
+
+# Migration working directories
+migrate_working_dir/
 
 # Editor-specific
 .atom/
 .buildlog/
 .history
 .svn/
-.idea/
-*.iml
-*.ipr
-*.iws
-
-# Migration working directories
-migrate_working_dir/
-
-# IntelliJ-related
-.idea/
-*.iml
-*.ipr
-*.iws
-
-# Visual Studio Code
-# Uncomment the following line if you don't want to include VS Code config in your repo.
-#.vscode/
-
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.pub-cache/
-.pub/
-build/
-
-# Symbolication and Obfuscation related
-app.*.symbols
-app.*.map.json
-
-# Android-specific
-/android/app/debug
-/android/app/profile
-/android/app/release
-
-# Other common unnecessary files
-*.bak
-*.tmp
-*.old
-*.swp
-*.lock
-*.cache

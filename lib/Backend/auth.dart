@@ -1,7 +1,9 @@
 import 'package:connect/Backend/chat_service.dart';
 import 'package:connect/Backend/path.dart';
+import 'package:connect/Providers/location_provider.dart';
 import 'package:connect/Providers/profile_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:location/location.dart';
 import 'package:logger/logger.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
@@ -17,6 +19,9 @@ class Auth {
     final url = ApiPath.login();
 
     try {
+      final locationProvider =
+          Provider.of<LocationProvider>(context, listen: false);
+      LocationData? location = locationProvider.currentLocation;
       final response = await http.post(
         Uri.parse(url),
         headers: {
@@ -25,6 +30,8 @@ class Auth {
         body: jsonEncode({
           'phone_no': phoneNumber,
           'password': pswd,
+          'latitude': location?.latitude,
+          'longitude': location?.longitude
         }),
       );
 
@@ -83,13 +90,20 @@ class Auth {
     }
   }
 
-  Future<http.Response> signup(Profile profile) async {
+  Future<http.Response> signup(
+      BuildContext context, Map<String, dynamic> body) async {
     final url = Uri.parse(ApiPath.signup());
 
-    // Convert Profile object to JSON
-    final Map<String, dynamic> body = profile.toJson();
-
     try {
+      final locationProvider =
+          Provider.of<LocationProvider>(context, listen: false);
+      LocationData? location = locationProvider.currentLocation;
+
+      body['latitude'] = location?.latitude;
+      body['longitude'] = location?.longitude;
+
+      logger.d(body);
+
       // Send POST request to the signup API endpoint
       final response = await http.post(
         url,
@@ -100,7 +114,7 @@ class Auth {
         body: jsonEncode(body), // Convert Map to JSON string
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         // Successfully signed up
         return response;
       } else {
